@@ -114,7 +114,7 @@ void LicenseManager::saveGeneratedData(const string &filename) {
 
   if (file.is_open()) {
     for (int i = 0; i < this->licenses.size(); i++) {
-      if (licenses[i].license != "" || licenses[i].mail != "")
+      if (licenses[i].license.empty() || licenses[i].mail.empty())
         continue;
       file << this->licenses[i].mail << "," << licenses[i].license << endl;
     }
@@ -124,12 +124,18 @@ void LicenseManager::saveGeneratedData(const string &filename) {
 }
 
 void LicenseManager::showAllLicenses() {
-  for (auto &license : licenses) {
-    cout << GREEN << " Mail: " << RESET << license.mail << endl;
-    cout << GREEN << "󰌆 License: " << RESET << license.license << endl;
-    cout << endl;
-  }
-  copyLicenseToClipboard();
+    if (licenses.empty()) {
+        cout << RED << "No results were generated." << RESET << endl;
+        return;
+    }
+
+    for (auto &license : licenses) {
+        cout << GREEN << "Mail: " << RESET << license.mail << endl;
+        cout << GREEN << "License: " << RESET << license.license << endl;
+        cout << endl;
+    }
+
+    // Clipboard copying is disabled for headless Docker containers.
 }
 
 void LicenseManager::copyLicenseToClipboard() {
