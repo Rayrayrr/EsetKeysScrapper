@@ -137,25 +137,55 @@ void LicenseManager::showAllLicenses() {
 
     // Clipboard copying is disabled for headless Docker containers.
 }
-
 void LicenseManager::copyLicenseToClipboard() {
-  string text = licenses[0].license;
-#if _WIN32 || _WIN64
+  if (licenses.empty()) {
+    std::cerr << "No license data available." << std::endl;
+    return;
+  }
+
+  const std::string& text = licenses[0].license;
+
+#if defined(_WIN32) || defined(_WIN64)
   if (OpenClipboard(NULL)) {
     EmptyClipboard();
 
     HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, text.size() + 1);
     if (hGlobal) {
-      memcpy(GlobalLock(hGlobal), text.c_str(), text.size() + 1);
-      GlobalUnlock(hGlobal);
+      void* memory = GlobalLock(hGlobal);
 
-      SetClipboardData(CF_TEXT, hGlobal);
+      if (memory) {
+        memcpy(memory, text.c_str(), text.size() + 1);
+        GlobalUnlock(hGlobal);
+        SetClipboardData(CF_TEXT, hGlobal);
+      } else {
+        GlobalFree(hGlobal);
+      }
     }
 
     CloseClipboard();
   }
 #else
-  std::string command = "echo \"" + text + "\" | wl-copy";
-  system(command.c_str());
+  std::cout << text << std::endl;
 #endif
 }
+//void LicenseManager::copyLicenseToClipboard() {
+ // string text = licenses[0].license;
+//#if _WIN32 || _WIN64
+  //if (OpenClipboard(NULL)) {
+    //EmptyClipboard();
+//
+    //HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, text.size() + 1);
+    //if (hGlobal) {
+      //memcpy(GlobalLock(hGlobal), text.c_str(), text.size() + 1);
+      //GlobalUnlock(hGlobal);
+//
+      //SetClipboardData(CF_TEXT, hGlobal);
+    //}
+//
+    //CloseClipboard();
+  //}
+//#else
+  //std::string command = "echo \"" + text + "\" | wl-copy";
+  //system(command.c_str());
+//#endif
+//}
